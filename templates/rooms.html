@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" >
+<html lang="en">
 <head>
   <meta charset="UTF-8" />
   <title>Rooms</title>
@@ -12,7 +12,7 @@
   <div class="container">
     <a class="navbar-brand" href="{{ url_for('rooms') }}">ChatApp</a>
     <div class="d-flex align-items-center">
-      <span class="me-3">Hi, {{ session['username'] }}</span>
+      <span class="me-3">Hi, {{ session.get('username', 'Guest') }}</span>
       <a href="{{ url_for('logout') }}" class="btn btn-outline-danger btn-sm">Logout</a>
     </div>
   </div>
@@ -25,14 +25,14 @@
   </div>
 
   {% with messages = get_flashed_messages(with_categories=true) %}
-  {% if messages %}
-    {% for category, msg in messages %}
-      <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
-        {{ msg }}
-        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-      </div>
-    {% endfor %}
-  {% endif %}
+    {% if messages %}
+      {% for category, msg in messages %}
+        <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+          {{ msg }}
+          <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+      {% endfor %}
+    {% endif %}
   {% endwith %}
 
   {% if rooms %}
@@ -48,11 +48,11 @@
         </div>
         <div class="d-flex gap-2 flex-wrap">
           <a href="{{ url_for('chat', room_id=room.id) }}" class="btn btn-primary btn-sm">Enter Chat</a>
-          {% if room.host_id == session['user_id'] %}
-          <a href="{{ url_for('room_settings', room_id=room.id) }}" class="btn btn-secondary btn-sm">Settings</a>
-          <form method="POST" action="{{ url_for('room_delete', room_id=room.id) }}" onsubmit="return confirm('Are you sure to deactivate this room?');" style="display:inline;">
-            <button class="btn btn-danger btn-sm" type="submit">Deactivate</button>
-          </form>
+          {% if room.host_id == session.get('user_id') %}
+            <a href="{{ url_for('room_settings', room_id=room.id) }}" class="btn btn-secondary btn-sm">Settings</a>
+            <form method="POST" action="{{ url_for('room_delete', room_id=room.id) }}" onsubmit="return confirm('Are you sure to deactivate this room?');">
+              <button class="btn btn-danger btn-sm" type="submit">Deactivate</button>
+            </form>
           {% endif %}
         </div>
       </div>
