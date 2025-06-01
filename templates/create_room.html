@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <title>Create Room</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet"/>
+</head>
+<body class="bg-light">
+<div class="container mt-5">
+    <h2>Create New Room</h2>
+    {% with messages = get_flashed_messages() %}
+    {% if messages %}
+        <div class="alert alert-warning">
+            {% for msg in messages %}
+                <div>{{ msg }}</div>
+            {% endfor %}
+        </div>
+    {% endif %}
+    {% endwith %}
+    <form method="POST" action="{{ url_for('create_room') }}">
+        <div class="mb-3">
+            <label for="room_name" class="form-label">Room Name</label>
+            <input type="text" name="room_name" id="room_name" class="form-control" required/>
+        </div>
+        <div class="mb-3">
+            <label for="password" class="form-label">Password (optional)</label>
+            <input type="password" name="password" id="password" class="form-control" />
+        </div>
+        <div class="mb-3">
+            <label for="max_users" class="form-label">Max Users</label>
+            <input type="number" name="max_users" id="max_users" class="form-control" min="1" max="100" value="10" required/>
+        </div>
+        <div class="mb-3 form-check">
+            <input type="checkbox" class="form-check-input" id="auto_destroy" name="auto_destroy" />
+            <label class="form-check-label" for="auto_destroy">Auto destroy room after inactivity</label>
+        </div>
+        <button type="submit" class="btn btn-primary">Create Room</button>
+        <a href="{{ url_for('rooms') }}" class="btn btn-secondary ms-2">Back to Rooms</a>
+    </form>
+</div>
+</body>
+</html>
