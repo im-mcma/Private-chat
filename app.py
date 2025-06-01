@@ -11,7 +11,7 @@ app.secret_key = os.getenv('SECRET_KEY', 'supersecretkey')
 
 app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv(
     'DATABASE_URL',
-    'postgresql://dbchatroom_user:9qRUJQRw0n0ydjUF2VskwFXV1YfGXj6o@dpg-d0uakvumcj7s739gatrg-a.oregon-postgres.render.com/dbchatroom'  # برای تست لوکال
+    'postgresql://dbchatroom_user:9qRUJQRw0n0ydjUF2VskwFXV1YfGXj6o@dpg-d0uakvumcj7s739gatrg-a.oregon-postgres.render.com/dbchatroom'
 )
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['SESSION_TYPE'] = 'filesystem'
@@ -44,7 +44,6 @@ class Room(db.Model):
     is_active = db.Column(db.Boolean, default=True)
     last_active = db.Column(db.DateTime, default=datetime.utcnow)
 
-    # ارتباط به میزبان
     host = db.relationship('User')
 
     def check_password(self, password):
@@ -68,10 +67,7 @@ class Message(db.Model):
     user = db.relationship('User')
     room = db.relationship('Room')
 
-# ذخیره اتاق فعلی کاربران
 user_rooms = {}
-
-# ----- مسیرهای اصلی -----
 
 @app.route('/')
 def index():
@@ -114,8 +110,6 @@ def logout():
     session.clear()
     flash('You have been logged out.', 'info')
     return redirect(url_for('login'))
-
-# ----- مدیریت روم‌ها -----
 
 @app.route('/rooms')
 def rooms():
@@ -178,7 +172,6 @@ def room_settings(room_id):
         return redirect(url_for('room_settings', room_id=room_id))
     return render_template('room_settings.html', room=room)
 
-# حذف موقت روم (توسط میزبان)
 @app.route('/rooms/<int:room_id>/delete', methods=['POST'])
 def room_delete(room_id):
     if 'user_id' not in session:
@@ -194,8 +187,6 @@ def room_delete(room_id):
     flash(f'Room "{room.name}" has been deactivated.', 'info')
     return redirect(url_for('rooms'))
 
-# ----- صفحه چت -----
-
 @app.route('/rooms/<int:room_id>/chat')
 def chat(room_id):
     if 'user_id' not in session:
@@ -206,13 +197,11 @@ def chat(room_id):
         flash('This room is inactive.', 'danger')
         return redirect(url_for('rooms'))
 
-    # بررسی محدودیت رمز
     password = request.args.get('password', '')
     if room.password_hash and not room.check_password(password):
         flash('Incorrect password for this room.', 'danger')
         return redirect(url_for('rooms'))
 
-    # دریافت پیام‌های قبلی (تا 30 روز)
     cutoff = datetime.utcnow() - timedelta(days=30)
     messages = Message.query.filter(
         Message.room_id == room.id,
@@ -220,8 +209,6 @@ def chat(room_id):
     ).order_by(Message.timestamp.asc()).all()
 
     return render_template('chat.html', room=room, username=session['username'], messages=messages)
-
-# ----- رویدادهای Socket.IO -----
 
 @socketio.on('join')
 def handle_join(data):
@@ -237,8 +224,7 @@ def handle_join(data):
         send(f"Room '{room_name}' does not exist or is inactive.", to=request.sid)
         return
 
-    # بررسی تعداد کاربران حاضر (ساده، می‌تونیم توسعه بدیم)
-    # در این مثال، تعداد کاربران فعال رو نمی‌شماریم به صورت دقیق
+    # TODO: بررسی تعداد کاربران فعلی با دقت بیشتر
 
     join_room(room_name)
     user_rooms[username] = room_name
@@ -268,7 +254,6 @@ def handle_message(msg):
     if not room:
         return
 
-    # ذخیره پیام در دیتابیس
     new_msg = Message(room_id=room.id, user_id=user_id, content=msg, timestamp=datetime.utcnow())
     db.session.add(new_msg)
     room.last_active = datetime.utcnow()
@@ -276,20 +261,14 @@ def handle_message(msg):
 
     send(f"{username}: {msg}", to=room_name)
 
-# پاکسازی روم‌های غیرفعال بعد از زمان مشخص (سرویس جداگانه یا هر بار که اجرا میشه)
 def cleanup_rooms():
     now = datetime.utcnow()
     rooms = Room.query.filter(Room.is_active == False).all()
     for room in rooms:
         if room.last_active + timedelta(minutes=10) < now:
-            # حذف کامل روم و پیام‌ها پس از 10 دقیقه غیرفعال بودن
             Message.query.filter_by(room_id=room.id).delete()
             db.session.delete(room)
     db.session.commit()
-
-# می‌تونیم هر بار اجرای برنامه یا یک کرون جاب این تابع رو اجرا کنیم
-
-# اجرای برنامه
 
 if __name__ == '__main__':
     with app.app_context():
