@@ -1,57 +1,81 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8" />
-    <title>Chat Room - {{ room.name }}</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet"/>
-    <script src="https://cdn.socket.io/4.6.1/socket.io.min.js" crossorigin="anonymous"></script>
-</head>
-<body class="bg-light">
-<div class="container mt-4">
-    <div class="d-flex justify-content-between align-items-center mb-3">
-        <h3>Room: {{ room.name }}</h3>
-        <div class="d-flex gap-2">
-            <a href="{{ url_for('rooms') }}" class="btn btn-secondary">Back to Rooms</a>
-            <a href="{{ url_for('logout') }}" class="btn btn-danger">Logout</a>
-        </div>
-    </div>
+{% extends "layout.html" %}
+{% block title %}چت روم {{ room.name }}{% endblock %}
 
-    <div class="border rounded p-3 mb-3 bg-white" style="height: 400px; overflow-y: auto;" id="chatbox"></div>
+{% block head %}
+<style>
+  #messages {
+    height: 400px;
+    overflow-y: scroll;
+    background: #fff;
+    border: 1px solid #ddd;
+    padding: 1rem;
+    border-radius: 5px;
+    margin-bottom: 1rem;
+    font-family: Vazir, sans-serif;
+    direction: rtl;
+  }
+  #messages div {
+    margin-bottom: 0.5rem;
+  }
+  #message-input {
+    resize: none;
+  }
+</style>
+{% endblock %}
 
-    <div class="input-group">
-        <input type="text" id="message" class="form-control" placeholder="Type a message" autocomplete="off" />
-        <button id="sendBtn" class="btn btn-primary">Send</button>
-    </div>
+{% block content %}
+<h2 class="mb-3">چت روم: {{ room.name }}</h2>
+<div id="messages">
+  {% for message in messages %}
+    <div><strong>{{ message.user.username }}:</strong> {{ message.content }}</div>
+  {% else %}
+    <div>هیچ پیامی وجود ندارد.</div>
+  {% endfor %}
 </div>
+<form id="chat-form">
+  <div class="input-group">
+    <textarea id="message-input" class="form-control" rows="2" placeholder="پیام خود را وارد کنید..." required></textarea>
+    <button type="submit" class="btn btn-primary">ارسال</button>
+  </div>
+</form>
+{% endblock %}
 
+{% block scripts %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.5.0/socket.io.min.js"></script>
 <script>
-    const socket = io();
+  const socket = io();
+  const roomName = "{{ room.name }}";
+  const username = "{{ username }}";
 
-    const roomName = "{{ room.name }}";
-    socket.emit("join", { room: roomName });
+  const messagesDiv = document.getElementById('messages');
+  const chatForm = document.getElementById('chat-form');
+  const messageInput = document.getElementById('message-input');
 
-    const chatbox = document.getElementById("chatbox");
-    const messageInput = document.getElementById("message");
-    const sendBtn = document.getElementById("sendBtn");
+  function scrollToBottom() {
+    messagesDiv.scrollTop = messagesDiv.scrollHeight;
+  }
 
-    sendBtn.onclick = () => {
-        const msg = messageInput.value.trim();
-        if (!msg) return;
-        socket.emit("message", { room: roomName, message: msg });
-        messageInput.value = '';
-    };
+  socket.on('connect', () => {
+    socket.emit('join', { room: roomName });
+  });
 
-    socket.on("message", (msg) => {
-        const div = document.createElement("div");
-        div.textContent = msg;
-        chatbox.appendChild(div);
-        chatbox.scrollTop = chatbox.scrollHeight;
-    });
+  socket.on('message', (msg) => {
+    const div = document.createElement('div');
+    div.textContent = msg;
+    messagesDiv.appendChild(div);
+    scrollToBottom();
+  });
 
-    window.onbeforeunload = () => {
-        socket.emit("leave", { room: roomName });
-    };
+  chatForm.addEventListener('submit', (e) => {
+    e.preventDefault();
+    const msg = messageInput.value.trim();
+    if (!msg) return;
+    socket.emit('message', msg);
+    messageInput.value = '';
+  });
+
+  window.addEventListener('beforeunload', () => {
+    socket.emit('leave');
+  });
 </script>
-</body>
-</html>
+{% endblock %}
