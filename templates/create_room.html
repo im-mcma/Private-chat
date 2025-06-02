@@ -2,37 +2,25 @@
 {% block title %}Create Room{% endblock %}
 
 {% block content %}
-<div class="d-flex justify-content-center align-items-center" style="min-height: 70vh;">
-  <div class="card shadow-sm p-4 w-100" style="max-width: 500px;">
-    <h4 class="mb-3 fw-bold text-center">🛠 Create a New Room</h4>
-
-    <form method="POST">
-      {{ form.hidden_tag() }}
-
-      <div class="mb-3">
-        {{ form.name.label(class="form-label fw-semibold") }}
-        {{ form.name(class="form-control", placeholder="Enter room name") }}
-        {% for error in form.name.errors %}
-          <div class="text-danger small">{{ error }}</div>
-        {% endfor %}
-      </div>
-
-      <div class="mb-3">
-        {{ form.description.label(class="form-label fw-semibold") }}
-        {{ form.description(class="form-control", placeholder="Optional description...") }}
-        {% for error in form.description.errors %}
-          <div class="text-danger small">{{ error }}</div>
-        {% endfor %}
-      </div>
-
-      <div class="d-grid">
-        <button type="submit" class="btn btn-success">Create Room</button>
-      </div>
+<div class="container mt-4">
+    <h2>Create a New Room</h2>
+    <form method="POST" action="{{ url_for('create_room') }}">
+        <div class="mb-3">
+            <label for="name" class="form-label">Room Name</label>
+            <input type="text" class="form-control" id="name" name="name" placeholder="Enter room name" required maxlength="50">
+        </div>
+        <div class="mb-3">
+            <label for="max_users" class="form-label">Maximum Users</label>
+            <input type="number" class="form-control" id="max_users" name="max_users" min="2" max="100" value="10" required>
+        </div>
+        <div class="form-check mb-3">
+            <input class="form-check-input" type="checkbox" value="1" id="auto_destroy" name="auto_destroy">
+            <label class="form-check-label" for="auto_destroy">
+                Auto Destroy Room When Empty
+            </label>
+        </div>
+        <button type="submit" class="btn btn-primary">Create Room</button>
+        <a href="{{ url_for('rooms') }}" class="btn btn-secondary ms-2">Cancel</a>
     </form>
-
-    <div class="mt-3 text-center">
-      <a href="{{ url_for('rooms') }}" class="text-decoration-none">← Back to rooms</a>
-    </div>
-  </div>
 </div>
 {% endblock %}
