@@ -1,66 +1,60 @@
 {% extends "layout.html" %}
-{% block title %}{{ room.name }}{% endblock %}
+{% block title %}Chat - {{ room.name }}{% endblock %}
 
 {% block content %}
-<div class="d-flex flex-column" style="height: 75vh;">
-    <div class="d-flex justify-content-between align-items-center mb-3">
-        <h4 class="fw-bold mb-0">💬 Room: {{ room.name }}</h4>
-        <a href="{{ url_for('rooms') }}" class="btn btn-sm btn-outline-secondary">← Back to Rooms</a>
-    </div>
+<div class="container py-3">
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h4 class="fw-bold">💬 Room: {{ room.name }}</h4>
+    <a href="{{ url_for('rooms') }}" class="btn btn-outline-secondary btn-sm">← Back to Rooms</a>
+  </div>
 
-    <!-- Chat Messages -->
-    <div id="chat-box" class="bg-light border rounded p-3 mb-3 flex-grow-1 overflow-auto" style="height: 100%;">
-        {% for msg in messages %}
-        <div class="mb-2">
-            <strong class="text-primary">{{ msg.user.username }}</strong>
-            <small class="text-muted">({{ msg.timestamp.strftime('%H:%M') }})</small>:
-            <span>{{ msg.content }}</span>
-        </div>
-        {% endfor %}
-    </div>
+  <div class="card shadow-sm chat-box" style="height: 60vh; overflow-y: auto;" id="chat-box">
+    <ul class="list-group list-group-flush" id="messages">
+      {% for msg in messages %}
+      <li class="list-group-item {% if msg.username == current_user.username %}bg-light text-end{% endif %}">
+        <div class="fw-semibold">{{ msg.username }}</div>
+        <div>{{ msg.content }}</div>
+        <small class="text-muted">{{ msg.timestamp.strftime('%H:%M') }}</small>
+      </li>
+      {% endfor %}
+    </ul>
+  </div>
 
-    <!-- Message Input -->
-    <form id="chat-form" class="d-flex">
-        <input type="text" id="message-input" class="form-control me-2" placeholder="Type a message..." autocomplete="off">
-        <button class="btn btn-primary" type="submit">Send</button>
-    </form>
+  <form id="chat-form" class="mt-3 d-flex">
+    <input type="text" id="message" class="form-control me-2" placeholder="Type your message..." autocomplete="off">
+    <button class="btn btn-primary">Send</button>
+  </form>
 </div>
 
-<!-- JS -->
-<script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
+<script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
 <script>
-    const socket = io();
+  const socket = io();
+  const room = "{{ room.name }}";
+  const username = "{{ current_user.username }}";
 
-    socket.emit('join', {
-        room_id: {{ room.id }},
-        username: "{{ current_user.username }}"
-    });
+  socket.emit("join_room", { room });
 
-    // Incoming messages
-    socket.on('message', function(data) {
-        const chatBox = document.getElementById('chat-box');
-        const msgHtml = `<div class="mb-2">
-            <strong class="text-primary">${data.username}</strong>
-            <small class="text-muted">(${data.timestamp})</small>:
-            <span>${data.content}</span>
-        </div>`;
-        chatBox.innerHTML += msgHtml;
-        chatBox.scrollTop = chatBox.scrollHeight;
-    });
+  document.getElementById("chat-form").addEventListener("submit", function (e) {
+    e.preventDefault();
+    const msgInput = document.getElementById("message");
+    const message = msgInput.value.trim();
+    if (message !== "") {
+      socket.emit("send_message", { message, room, username });
+      msgInput.value = "";
+    }
+  });
 
-    // Send message
-    document.getElementById('chat-form').addEventListener('submit', function(e) {
-        e.preventDefault();
-        const input = document.getElementById('message-input');
-        const message = input.value.trim();
-        if (message) {
-            socket.emit('send_message', {
-                room_id: {{ room.id }},
-                username: "{{ current_user.username }}",
-                content: message
-            });
-            input.value = '';
-        }
-    });
+  socket.on("receive_message", data => {
+    const messagesList = document.getElementById("messages");
+    const li = document.createElement("li");
+    li.className = "list-group-item" + (data.username === username ? " bg-light text-end" : "");
+    li.innerHTML = `
+      <div class="fw-semibold">${data.username}</div>
+      <div>${data.message}</div>
+      <small class="text-muted">${data.time}</small>
+    `;
+    messagesList.appendChild(li);
+    document.getElementById("chat-box").scrollTop = document.getElementById("chat-box").scrollHeight;
+  });
 </script>
 {% endblock %}
