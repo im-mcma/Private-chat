@@ -53,17 +53,13 @@ class Message(db.Model):
     def __repr__(self):
         return f'<Message {self.id} in Room {self.room_id}>'
 
-# === Create admin if not exists ===
-def create_admin_if_not_exists():
-    admin_username = 'im_abi'
-    admin_password = os.getenv('ADMIN_DEFAULT_PASSWORD', 'default_admin_password')  # حتما تغییر بده
-    admin = User.query.filter_by(username=admin_username).first()
-    if not admin:
-        pw_hash = bcrypt.generate_password_hash(admin_password).decode('utf-8')
-        admin = User(username=admin_username, password_hash=pw_hash, is_admin=True)
-        db.session.add(admin)
-        db.session.commit()
-        print(f'Admin user "{admin_username}" created with default password.')
+# === Setup DB and Admin user ===
+def setup_database():
+    db.create_all()
+    admin_user = User.query.filter_by(username='im_abi').first()
+    if not admin_user:
+        # اگر کاربری با نام im_abi نیست، ادمین نمیسازیم خودِ روت ثبت‌نام می‌کنه
+        pass
 
 # === Routes ===
 @app.route('/')
@@ -82,14 +78,14 @@ def register():
             flash('Username already taken', 'danger')
             return redirect(url_for('register'))
 
-        # جلوگیری از ثبت نام دوباره ادمین
-        if username == 'im_abi':
-            flash('This username is reserved.', 'danger')
-            return redirect(url_for('register'))
-
         pw_hash = bcrypt.generate_password_hash(password).decode('utf-8')
 
-        new_user = User(username=username, password_hash=pw_hash)
+        # اگر اولین کاربر با نام im_abi هست، ادمین کن
+        is_admin = False
+        if username == 'im_abi' and User.query.filter_by(username='im_abi').count() == 0:
+            is_admin = True
+
+        new_user = User(username=username, password_hash=pw_hash, is_admin=is_admin)
         db.session.add(new_user)
         db.session.commit()
 
@@ -218,13 +214,10 @@ def page_not_found(e):
 def forbidden(e):
     return render_template('403.html'), 403
 
-# === Auto create tables and admin before first request ===
-@app.before_first_request
-def setup():
-    db.create_all()
-    create_admin_if_not_exists()
 
-# === Run ===
 if __name__ == '__main__':
+    # اینجا قبل اجرا، جدول‌ها و دیتا رو ستاپ کن
+    with app.app_context():
+        setup_database()
     port = int(os.environ.get('PORT', 10000))
     socketio.run(app, host='0.0.0.0', port=port, debug=True)
