@@ -1,48 +1,44 @@
 {% extends "layout.html" %}
-{% block title %}Chat Rooms{% endblock %}
+{% block title %}Rooms{% endblock %}
 
 {% block content %}
-<div class="d-flex justify-content-between align-items-center mb-4">
-    <h2 class="fw-bold">💬 Available Rooms</h2>
-    <a href="{{ url_for('create_room') }}" class="btn btn-primary">
-        ➕ Create Room
-    </a>
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h2>Active Rooms</h2>
+    <a href="{{ url_for('create_room') }}" class="btn btn-primary">Create New Room</a>
 </div>
 
 {% if rooms %}
-<div class="row g-3">
-    {% for room in rooms %}
-    <div class="col-md-6 col-lg-4">
-        <div class="card shadow-sm border-0 h-100">
-            <div class="card-body d-flex flex-column">
-                <h5 class="card-title fw-semibold mb-2">
-                    🏠 {{ room.name }}
-                </h5>
-                <p class="mb-1">
-                    <strong>Owner:</strong> {{ room.host.username }}
-                </p>
-                <p class="mb-1">
-                    <strong>Max Users:</strong> {{ room.max_users }}
-                </p>
-                <p class="mb-2">
-                    <strong>Timeout:</strong> {{ room.inactive_timeout }} mins
-                </p>
-                {% if room.password_hash %}
-                    <span class="badge bg-warning text-dark mb-3">🔒 Password Protected</span>
-                {% else %}
-                    <span class="badge bg-success mb-3">🔓 Open Room</span>
+<table class="table table-hover">
+    <thead class="table-light">
+        <tr>
+            <th>Name</th>
+            <th>Owner</th>
+            <th>Max Users</th>
+            <th>Auto Destroy</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for room in rooms %}
+        <tr>
+            <td>{{ room.name }}</td>
+            <td>{{ room.host.username }}</td>
+            <td>{{ room.max_users }}</td>
+            <td>{{ 'Yes' if room.auto_destroy else 'No' }}</td>
+            <td>
+                <a href="{{ url_for('chat', room_id=room.id) }}" class="btn btn-success btn-sm me-1">Join</a>
+                {% if room.host_id == session.get('user_id') %}
+                    <a href="{{ url_for('room_settings', room_id=room.id) }}" class="btn btn-outline-primary btn-sm me-1">Settings</a>
+                    <form method="POST" action="{{ url_for('room_delete', room_id=room.id) }}" style="display:inline;" onsubmit="return confirm('Are you sure you want to deactivate this room?');">
+                        <button type="submit" class="btn btn-outline-danger btn-sm">Deactivate</button>
+                    </form>
                 {% endif %}
-                <a href="{{ url_for('chat', room_id=room.id) }}" class="btn btn-outline-primary mt-auto">
-                    Join Room
-                </a>
-            </div>
-        </div>
-    </div>
-    {% endfor %}
-</div>
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
 {% else %}
-    <div class="alert alert-info text-center">
-        No rooms available. Create one to get started!
-    </div>
+<p>No active rooms found. Create one now!</p>
 {% endif %}
 {% endblock %}
