@@ -5,6 +5,8 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_bcrypt import Bcrypt
 from flask_socketio import SocketIO
 from flask_session import Session
+from flask_migrate import Migrate, upgrade
+import logging
 
 # === App & Config ===
 app = Flask(__name__, template_folder='.')
@@ -18,6 +20,7 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['SESSION_TYPE'] = 'filesystem'
 
 db = SQLAlchemy(app)
+migrate = Migrate(app, db)   # فعال سازی Flask-Migrate
 bcrypt = Bcrypt(app)
 Session(app)
 socketio = SocketIO(app, manage_session=False)
@@ -65,14 +68,13 @@ def register():
     if request.method == 'POST':
         username = request.form['username'].strip()
         password = request.form['password']
-        
+
         if User.query.filter_by(username=username).first():
             flash('Username already taken', 'danger')
             return redirect(url_for('register'))
 
         pw_hash = bcrypt.generate_password_hash(password).decode('utf-8')
 
-        # اولین بار im_abi ادمین شود
         is_admin = (username == 'im_abi' and User.query.filter_by(username='im_abi').count() == 0)
 
         new_user = User(username=username, password_hash=pw_hash, is_admin=is_admin)
@@ -81,7 +83,7 @@ def register():
 
         flash('Registration successful. Please login.', 'success')
         return redirect(url_for('login'))
-    
+
     return render_template('register.html')
 
 @app.route('/login', methods=['GET', 'POST'])
@@ -204,9 +206,19 @@ def page_not_found(e):
 def forbidden(e):
     return render_template('403.html'), 403
 
+# === Auto upgrade or create DB on startup ===
+@app.before_first_request
+def auto_db_setup():
+    try:
+        # سعی کنیم migration ها را آپگرید کنیم (اگر migrations موجود بود)
+        upgrade()
+        app.logger.info("Database migration upgrade successful.")
+    except Exception as e:
+        app.logger.warning(f"Migration upgrade failed or no migrations found. Creating tables directly. Error: {e}")
+        # اگر migration وجود نداشت یا مشکل داشت، مستقیم جداول را ایجاد کن
+        db.create_all()
+
 # === Run ===
 if __name__ == '__main__':
-    with app.app_context():
-        db.create_all()
     port = int(os.environ.get('PORT', 10000))
     socketio.run(app, host='0.0.0.0', port=port, debug=True)
