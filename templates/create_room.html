@@ -1,36 +1,33 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <title>Create Room</title>
-</head>
-<body>
-  <h2>Create New Room</h2>
+{% extends "layout.html" %}
+{% block title %}ساخت روم جدید{% endblock %}
 
-  {% with messages = get_flashed_messages() %}
-    {% if messages %}
-      {% for msg in messages %}
-        <p style="color:red;">{{ msg }}</p>
-      {% endfor %}
-    {% endif %}
-  {% endwith %}
-
-  <form method="POST">
-    <label for="name">Room Name</label><br>
-    <input type="text" id="name" name="name" required><br><br>
-
-    <label for="password">Password (optional)</label><br>
-    <input type="text" id="password" name="password"><br><br>
-
-    <label for="max_users">Max Users</label><br>
-    <input type="number" id="max_users" name="max_users" min="2" max="100" value="10"><br><br>
-
-    <label for="inactive_timeout">Auto destroy after (minutes)</label><br>
-    <input type="number" id="inactive_timeout" name="inactive_timeout" min="1" value="30"><br><br>
-
-    <button type="submit">Create Room</button>
-  </form>
-
-  <a href="{{ url_for('rooms') }}">Back to Rooms</a>
-</body>
-</html>
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-md-6 col-lg-5">
+    <div class="card shadow-sm">
+      <div class="card-body">
+        <h3 class="card-title mb-4 text-center">ساخت روم جدید</h3>
+        <form method="post" novalidate>
+          <div class="mb-3">
+            <label for="name" class="form-label">نام روم</label>
+            <input type="text" id="name" name="name" class="form-control" required maxlength="100" />
+          </div>
+          <div class="mb-3">
+            <label for="password" class="form-label">رمز عبور (اختیاری)</label>
+            <input type="password" id="password" name="password" class="form-control" />
+          </div>
+          <div class="mb-3">
+            <label for="max_users" class="form-label">حداکثر تعداد کاربران</label>
+            <input type="number" id="max_users" name="max_users" class="form-control" min="2" max="100" value="10" />
+          </div>
+          <div class="mb-3">
+            <label for="inactive_timeout" class="form-label">زمان حذف خودکار روم (دقیقه)</label>
+            <input type="number" id="inactive_timeout" name="inactive_timeout" class="form-control" min="1" max="1440" value="30" />
+          </div>
+          <button type="submit" class="btn btn-primary w-100">ایجاد روم</button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
