@@ -1,68 +1,22 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <title>Rooms</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
-</head>
-<body class="bg-light">
+{% extends "layout.html" %}
+{% block title %}لیست روم‌ها{% endblock %}
 
-<nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm">
-  <div class="container">
-    <a class="navbar-brand" href="{{ url_for('rooms') }}">ChatApp</a>
-    <div class="d-flex align-items-center">
-      <span class="me-3">Hi, {{ session.get('username', 'Guest') }}</span>
-      <a href="{{ url_for('logout') }}" class="btn btn-outline-danger btn-sm">Logout</a>
-    </div>
-  </div>
-</nav>
-
-<div class="container mt-4">
-  <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
-    <h3 class="mb-0">Active Rooms</h3>
-    <a href="{{ url_for('create_room') }}" class="btn btn-success">Create New Room</a>
-  </div>
-
-  {% with messages = get_flashed_messages(with_categories=true) %}
-    {% if messages %}
-      {% for category, msg in messages %}
-        <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
-          {{ msg }}
-          <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-        </div>
-      {% endfor %}
-    {% endif %}
-  {% endwith %}
-
-  {% if rooms %}
-    <div class="list-group">
-      {% for room in rooms %}
-      <div class="list-group-item d-flex justify-content-between align-items-center flex-wrap gap-2">
-        <div>
-          <strong>{{ room.name }}</strong>
-          {% if room.password_hash %}
-            <span class="badge bg-warning text-dark ms-2">🔒</span>
-          {% endif %}
-          <div class="small text-muted">Host: {{ room.host.username }}</div>
-        </div>
-        <div class="d-flex gap-2 flex-wrap">
-          <a href="{{ url_for('chat', room_id=room.id) }}" class="btn btn-primary btn-sm">Enter Chat</a>
-          {% if room.host_id == session.get('user_id') %}
-            <a href="{{ url_for('room_settings', room_id=room.id) }}" class="btn btn-secondary btn-sm">Settings</a>
-            <form method="POST" action="{{ url_for('room_delete', room_id=room.id) }}" onsubmit="return confirm('Are you sure to deactivate this room?');">
-              <button class="btn btn-danger btn-sm" type="submit">Deactivate</button>
-            </form>
-          {% endif %}
-        </div>
-      </div>
-      {% endfor %}
-    </div>
-  {% else %}
-    <p class="text-muted">No active rooms found.</p>
-  {% endif %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <h2>روم‌ها</h2>
+  <a href="{{ url_for('create_room') }}" class="btn btn-success">ساخت روم جدید</a>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-</body>
-</html>
+{% if rooms %}
+  <div class="list-group">
+    {% for room in rooms %}
+      <a href="{{ url_for('chat', room_id=room.id) }}" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
+        {{ room.name }}
+        <span class="badge bg-primary rounded-pill">{{ room.max_users }} نفر</span>
+      </a>
+    {% endfor %}
+  </div>
+{% else %}
+  <p>هیچ رومی وجود ندارد.</p>
+{% endif %}
+{% endblock %}
