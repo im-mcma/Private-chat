@@ -3,10 +3,12 @@ from app import app, db, bcrypt
 from models import User, Room, Message
 from werkzeug.security import generate_password_hash, check_password_hash
 
-# روت اصلی - ریدایرکت به /rooms
+# روت اصلی - چک لاگین و ریدایرکت مناسب
 @app.route('/')
 def index():
-    return redirect(url_for('rooms'))
+    if 'user_id' in session:
+        return redirect(url_for('rooms'))
+    return redirect(url_for('login'))
 
 # ثبت‌نام
 @app.route('/register', methods=['GET', 'POST'])
@@ -68,7 +70,10 @@ def create_room():
         if Room.query.filter_by(name=name).first():
             flash('Room name already exists', 'danger')
             return redirect(url_for('create_room'))
-        delete_after = int(request.form.get('delete_after', 60))
+        try:
+            delete_after = int(request.form.get('delete_after', 60))
+        except ValueError:
+            delete_after = 60
         new_room = Room(name=name, created_by=session['user_id'], delete_after_minutes=delete_after)
         db.session.add(new_room)
         db.session.commit()
@@ -87,7 +92,10 @@ def room_settings(room_id):
         flash('Access denied', 'danger')
         return redirect(url_for('rooms'))
     if request.method == 'POST':
-        delete_after = int(request.form.get('delete_after', room.delete_after_minutes))
+        try:
+            delete_after = int(request.form.get('delete_after', room.delete_after_minutes))
+        except ValueError:
+            delete_after = room.delete_after_minutes
         room.delete_after_minutes = delete_after
         db.session.commit()
         flash('Room settings updated.', 'success')
