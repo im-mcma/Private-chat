@@ -5,7 +5,7 @@ from flask_bcrypt import Bcrypt
 from flask_socketio import SocketIO
 from flask_session import Session
 
-app = Flask(__name__)
+app = Flask(__name__, template_folder='templates')  # صریحاً فولدر قالب‌ها رو مشخص کردیم
 app.secret_key = os.getenv('SECRET_KEY', 'supersecretkey')
 
 app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv(
@@ -20,7 +20,6 @@ bcrypt = Bcrypt(app)
 Session(app)
 socketio = SocketIO(app, manage_session=False)
 
-# این ایمپورت باید حتما بعد از تعریف app و db بیاد
 import routes
 
 if __name__ == '__main__':
