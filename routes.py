@@ -1,11 +1,14 @@
-from flask import Flask, render_template, request, redirect, url_for, session, flash, abort
-from app import app, db
+from flask import render_template, request, redirect, url_for, session, flash, abort
+from app import app, db, bcrypt
 from models import User, Room, Message
-from datetime import datetime, timedelta
 from werkzeug.security import generate_password_hash, check_password_hash
 
-# ورود و ثبت‌نام
+# روت اصلی - ریدایرکت به /rooms
+@app.route('/')
+def index():
+    return redirect(url_for('rooms'))
 
+# ثبت‌نام
 @app.route('/register', methods=['GET', 'POST'])
 def register():
     if request.method == 'POST':
@@ -14,7 +17,7 @@ def register():
         if User.query.filter_by(username=username).first():
             flash('Username already taken', 'danger')
             return redirect(url_for('register'))
-        pw_hash = generate_password_hash(password)
+        pw_hash = bcrypt.generate_password_hash(password).decode('utf-8')
         new_user = User(username=username, password_hash=pw_hash)
         db.session.add(new_user)
         db.session.commit()
@@ -22,13 +25,14 @@ def register():
         return redirect(url_for('login'))
     return render_template('register.html')
 
+# ورود
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
         username = request.form['username'].strip()
         password = request.form['password']
         user = User.query.filter_by(username=username).first()
-        if user and check_password_hash(user.password_hash, password):
+        if user and bcrypt.check_password_hash(user.password_hash, password):
             session['user_id'] = user.id
             session['username'] = user.username
             session['is_admin'] = user.is_admin
@@ -37,14 +41,14 @@ def login():
         return redirect(url_for('login'))
     return render_template('login.html')
 
+# خروج
 @app.route('/logout')
 def logout():
     session.clear()
     flash('You have been logged out.', 'info')
     return redirect(url_for('login'))
 
-# صفحه اصلی اتاق‌ها
-
+# صفحه اتاق‌ها
 @app.route('/rooms')
 def rooms():
     if 'user_id' not in session:
@@ -54,7 +58,6 @@ def rooms():
     return render_template('rooms.html', rooms=rooms, user_id=session['user_id'])
 
 # ایجاد اتاق
-
 @app.route('/rooms/create', methods=['GET', 'POST'])
 def create_room():
     if 'user_id' not in session:
@@ -74,7 +77,6 @@ def create_room():
     return render_template('create_room.html')
 
 # تنظیمات اتاق
-
 @app.route('/rooms/<int:room_id>/settings', methods=['GET', 'POST'])
 def room_settings(room_id):
     if 'user_id' not in session:
@@ -92,8 +94,7 @@ def room_settings(room_id):
         return redirect(url_for('room_settings', room_id=room_id))
     return render_template('room_settings.html', room=room)
 
-# حذف اتاق (غیرفعال سازی)
-
+# حذف اتاق
 @app.route('/rooms/<int:room_id>/delete', methods=['POST'])
 def room_delete(room_id):
     if 'user_id' not in session:
@@ -109,7 +110,6 @@ def room_delete(room_id):
     return redirect(url_for('rooms'))
 
 # پنل ادمین
-
 @app.route('/admin')
 def admin_panel():
     if not session.get('is_admin'):
@@ -137,3 +137,13 @@ def admin_delete_room(room_id):
     db.session.commit()
     flash(f'Room "{room.name}" deleted.', 'info')
     return redirect(url_for('admin_panel'))
+
+# صفحه خطای 404
+@app.errorhandler(404)
+def page_not_found(e):
+    return render_template('404.html'), 404
+
+# صفحه خطای 403
+@app.errorhandler(403)
+def forbidden(e):
+    return render_template('403.html'), 403
