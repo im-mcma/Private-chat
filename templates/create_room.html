@@ -1,32 +1,37 @@
 {% extends "layout.html" %}
-{% block title %}ساخت روم جدید{% endblock %}
+{% block title %}Create Room{% endblock %}
 
 {% block content %}
-<div class="row justify-content-center">
-  <div class="col-md-6 col-lg-5">
-    <div class="card shadow-sm">
-      <div class="card-body">
-        <h3 class="card-title mb-4 text-center">ساخت روم جدید</h3>
-        <form method="post" novalidate>
-          <div class="mb-3">
-            <label for="name" class="form-label">نام روم</label>
-            <input type="text" id="name" name="name" class="form-control" required maxlength="100" />
-          </div>
-          <div class="mb-3">
-            <label for="password" class="form-label">رمز عبور (اختیاری)</label>
-            <input type="password" id="password" name="password" class="form-control" />
-          </div>
-          <div class="mb-3">
-            <label for="max_users" class="form-label">حداکثر تعداد کاربران</label>
-            <input type="number" id="max_users" name="max_users" class="form-control" min="2" max="100" value="10" />
-          </div>
-          <div class="mb-3">
-            <label for="inactive_timeout" class="form-label">زمان حذف خودکار روم (دقیقه)</label>
-            <input type="number" id="inactive_timeout" name="inactive_timeout" class="form-control" min="1" max="1440" value="30" />
-          </div>
-          <button type="submit" class="btn btn-primary w-100">ایجاد روم</button>
-        </form>
+<div class="d-flex justify-content-center align-items-center" style="min-height: 70vh;">
+  <div class="card shadow-sm p-4 w-100" style="max-width: 500px;">
+    <h4 class="mb-3 fw-bold text-center">🛠 Create a New Room</h4>
+
+    <form method="POST">
+      {{ form.hidden_tag() }}
+
+      <div class="mb-3">
+        {{ form.name.label(class="form-label fw-semibold") }}
+        {{ form.name(class="form-control", placeholder="Enter room name") }}
+        {% for error in form.name.errors %}
+          <div class="text-danger small">{{ error }}</div>
+        {% endfor %}
       </div>
+
+      <div class="mb-3">
+        {{ form.description.label(class="form-label fw-semibold") }}
+        {{ form.description(class="form-control", placeholder="Optional description...") }}
+        {% for error in form.description.errors %}
+          <div class="text-danger small">{{ error }}</div>
+        {% endfor %}
+      </div>
+
+      <div class="d-grid">
+        <button type="submit" class="btn btn-success">Create Room</button>
+      </div>
+    </form>
+
+    <div class="mt-3 text-center">
+      <a href="{{ url_for('rooms') }}" class="text-decoration-none">← Back to rooms</a>
     </div>
   </div>
 </div>
