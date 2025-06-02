@@ -8,6 +8,9 @@ class User(db.Model):
     is_admin = db.Column(db.Boolean, default=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
+    rooms = db.relationship('Room', backref='creator', lazy=True)
+    messages = db.relationship('Message', backref='author', lazy=True)
+
     def __repr__(self):
         return f'<User {self.username}>'
 
@@ -16,7 +19,9 @@ class Room(db.Model):
     name = db.Column(db.String(100), unique=True, nullable=False)
     created_by = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
-    delete_after_minutes = db.Column(db.Integer, default=60)  # قابل تنظیم در پنل تنظیمات
+    delete_after_minutes = db.Column(db.Integer, default=60)
+
+    messages = db.relationship('Message', backref='room', lazy=True)
 
     def __repr__(self):
         return f'<Room {self.name}>'
