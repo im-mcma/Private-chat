@@ -1,0 +1,86 @@
+{% extends "layout.html" %}
+{% block title %}Admin Panel{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+  <h2 class="fw-bold text-center mb-4">🛠 Admin Dashboard</h2>
+
+  <!-- Users Table -->
+  <div class="card shadow-sm mb-4">
+    <div class="card-header bg-primary text-white">
+      <h5 class="mb-0">👥 Users</h5>
+    </div>
+    <div class="card-body table-responsive">
+      <table class="table table-hover align-middle">
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Username</th>
+            <th class="text-end">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for user in users %}
+          <tr>
+            <td>{{ user.id }}</td>
+            <td>{{ user.username }}</td>
+            <td class="text-end">
+              <form method="POST" action="{{ url_for('admin_delete_user', user_id=user.id) }}" onsubmit="return confirm('Delete user?')" style="display: inline;">
+                <button class="btn btn-sm btn-outline-danger">Delete</button>
+              </form>
+            </td>
+          </tr>
+          {% else %}
+          <tr>
+            <td colspan="3" class="text-center text-muted">No users found.</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Rooms Table -->
+  <div class="card shadow-sm">
+    <div class="card-header bg-success text-white">
+      <h5 class="mb-0">💬 Rooms</h5>
+    </div>
+    <div class="card-body table-responsive">
+      <table class="table table-hover align-middle">
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Name</th>
+            <th>Owner</th>
+            <th>Max Users</th>
+            <th>Auto Destroy</th>
+            <th class="text-end">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for room in rooms %}
+          <tr>
+            <td>{{ room.id }}</td>
+            <td>{{ room.name }}</td>
+            <td>{{ room.owner.username }}</td>
+            <td>{{ room.max_users }}</td>
+            <td>{{ 'Yes' if room.auto_destroy else 'No' }}</td>
+            <td class="text-end">
+              <a href="{{ url_for('room_settings', room_id=room.id) }}" class="btn btn-sm btn-outline-primary">Edit</a>
+              <form method="POST" action="{{ url_for('admin_delete_room', room_id=room.id) }}" onsubmit="return confirm('Delete room?')" style="display:inline;">
+                <button class="btn btn-sm btn-outline-danger">Delete</button>
+              </form>
+            </td>
+          </tr>
+          {% else %}
+          <tr>
+            <td colspan="6" class="text-center text-muted">No rooms found.</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+</div>
+{% endblock %}
