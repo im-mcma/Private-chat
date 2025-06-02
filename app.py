@@ -1,10 +1,8 @@
 import os
-import routes
-from datetime import datetime, timedelta
-from flask import Flask, render_template, session, flash, redirect, url_for, request
+from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 from flask_bcrypt import Bcrypt
-from flask_socketio import SocketIO, join_room, leave_room, send
+from flask_socketio import SocketIO
 from flask_session import Session
 
 app = Flask(__name__)
@@ -22,11 +20,10 @@ bcrypt = Bcrypt(app)
 Session(app)
 socketio = SocketIO(app, manage_session=False)
 
-user_rooms = {}
+import routes
 
-# تو این فایل فقط کانفیگ اولیه و اجرای برنامه باشه
 if __name__ == '__main__':
     with app.app_context():
         db.create_all()
-    port = int(os.environ.get('PORT', 5000))
+    port = int(os.environ.get('PORT', 10000))
     socketio.run(app, host='0.0.0.0', port=port, debug=True)
