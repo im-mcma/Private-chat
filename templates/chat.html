@@ -1,60 +1,57 @@
 {% extends "layout.html" %}
-{% block title %}Chat - {{ room.name }}{% endblock %}
+{% block title %}Chat Room - {{ room.name }}{% endblock %}
 
 {% block content %}
-<div class="container py-3">
-  <div class="d-flex justify-content-between align-items-center mb-3">
-    <h4 class="fw-bold">💬 Room: {{ room.name }}</h4>
-    <a href="{{ url_for('rooms') }}" class="btn btn-outline-secondary btn-sm">← Back to Rooms</a>
-  </div>
-
-  <div class="card shadow-sm chat-box" style="height: 60vh; overflow-y: auto;" id="chat-box">
-    <ul class="list-group list-group-flush" id="messages">
-      {% for msg in messages %}
-      <li class="list-group-item {% if msg.username == current_user.username %}bg-light text-end{% endif %}">
-        <div class="fw-semibold">{{ msg.username }}</div>
-        <div>{{ msg.content }}</div>
-        <small class="text-muted">{{ msg.timestamp.strftime('%H:%M') }}</small>
-      </li>
-      {% endfor %}
-    </ul>
-  </div>
-
-  <form id="chat-form" class="mt-3 d-flex">
-    <input type="text" id="message" class="form-control me-2" placeholder="Type your message..." autocomplete="off">
-    <button class="btn btn-primary">Send</button>
-  </form>
+<div class="container mt-3 d-flex flex-column h-100" style="height: 80vh;">
+    <h2>Chat Room: {{ room.name }}</h2>
+    <div id="chat-window" class="border rounded p-3 flex-grow-1 overflow-auto mb-3 bg-light">
+        <!-- پیام‌ها اینجا نمایش داده می‌شوند -->
+    </div>
+    <form id="chat-form" class="d-flex">
+        <input type="text" id="message-input" class="form-control me-2" placeholder="پیام خود را تایپ کنید..." autocomplete="off" required>
+        <button type="submit" class="btn btn-primary">ارسال</button>
+    </form>
 </div>
 
-<script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+<script src="https://cdn.socket.io/4.6.1/socket.io.min.js" integrity="sha384-p5BKG7MX7kr3v6vUKlYavTQvMuWyF4GLuH+qDRgLZQ07aTg7m9+TF3fJ/Z/0Y9q9" crossorigin="anonymous"></script>
 <script>
-  const socket = io();
-  const room = "{{ room.name }}";
-  const username = "{{ current_user.username }}";
+    const socket = io();
 
-  socket.emit("join_room", { room });
+    const roomId = {{ room.id }};
+    const username = "{{ current_user.username|e }}";
 
-  document.getElementById("chat-form").addEventListener("submit", function (e) {
-    e.preventDefault();
-    const msgInput = document.getElementById("message");
-    const message = msgInput.value.trim();
-    if (message !== "") {
-      socket.emit("send_message", { message, room, username });
-      msgInput.value = "";
+    const chatWindow = document.getElementById('chat-window');
+    const messageInput = document.getElementById('message-input');
+    const chatForm = document.getElementById('chat-form');
+
+    function appendMessage(data) {
+        const msgDiv = document.createElement('div');
+        msgDiv.classList.add('mb-2');
+        if (data.username === username) {
+            msgDiv.classList.add('text-end');
+            msgDiv.innerHTML = `<strong>شما:</strong> ${data.message}`;
+        } else {
+            msgDiv.classList.add('text-start');
+            msgDiv.innerHTML = `<strong>${data.username}:</strong> ${data.message}`;
+        }
+        chatWindow.appendChild(msgDiv);
+        chatWindow.scrollTop = chatWindow.scrollHeight;
     }
-  });
 
-  socket.on("receive_message", data => {
-    const messagesList = document.getElementById("messages");
-    const li = document.createElement("li");
-    li.className = "list-group-item" + (data.username === username ? " bg-light text-end" : "");
-    li.innerHTML = `
-      <div class="fw-semibold">${data.username}</div>
-      <div>${data.message}</div>
-      <small class="text-muted">${data.time}</small>
-    `;
-    messagesList.appendChild(li);
-    document.getElementById("chat-box").scrollTop = document.getElementById("chat-box").scrollHeight;
-  });
+    socket.on('connect', () => {
+        socket.emit('join_room', { room: roomId });
+    });
+
+    socket.on('message', (data) => {
+        appendMessage(data);
+    });
+
+    chatForm.addEventListener('submit', (e) => {
+        e.preventDefault();
+        const msg = messageInput.value.trim();
+        if (msg.length === 0) return;
+        socket.emit('send_message', { room: roomId, message: msg });
+        messageInput.value = '';
+    });
 </script>
 {% endblock %}
