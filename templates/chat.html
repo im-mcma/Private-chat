@@ -1,81 +1,66 @@
 {% extends "layout.html" %}
-{% block title %}چت روم {{ room.name }}{% endblock %}
-
-{% block head %}
-<style>
-  #messages {
-    height: 400px;
-    overflow-y: scroll;
-    background: #fff;
-    border: 1px solid #ddd;
-    padding: 1rem;
-    border-radius: 5px;
-    margin-bottom: 1rem;
-    font-family: Vazir, sans-serif;
-    direction: rtl;
-  }
-  #messages div {
-    margin-bottom: 0.5rem;
-  }
-  #message-input {
-    resize: none;
-  }
-</style>
-{% endblock %}
+{% block title %}{{ room.name }}{% endblock %}
 
 {% block content %}
-<h2 class="mb-3">چت روم: {{ room.name }}</h2>
-<div id="messages">
-  {% for message in messages %}
-    <div><strong>{{ message.user.username }}:</strong> {{ message.content }}</div>
-  {% else %}
-    <div>هیچ پیامی وجود ندارد.</div>
-  {% endfor %}
+<div class="d-flex flex-column" style="height: 75vh;">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h4 class="fw-bold mb-0">💬 Room: {{ room.name }}</h4>
+        <a href="{{ url_for('rooms') }}" class="btn btn-sm btn-outline-secondary">← Back to Rooms</a>
+    </div>
+
+    <!-- Chat Messages -->
+    <div id="chat-box" class="bg-light border rounded p-3 mb-3 flex-grow-1 overflow-auto" style="height: 100%;">
+        {% for msg in messages %}
+        <div class="mb-2">
+            <strong class="text-primary">{{ msg.user.username }}</strong>
+            <small class="text-muted">({{ msg.timestamp.strftime('%H:%M') }})</small>:
+            <span>{{ msg.content }}</span>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- Message Input -->
+    <form id="chat-form" class="d-flex">
+        <input type="text" id="message-input" class="form-control me-2" placeholder="Type a message..." autocomplete="off">
+        <button class="btn btn-primary" type="submit">Send</button>
+    </form>
 </div>
-<form id="chat-form">
-  <div class="input-group">
-    <textarea id="message-input" class="form-control" rows="2" placeholder="پیام خود را وارد کنید..." required></textarea>
-    <button type="submit" class="btn btn-primary">ارسال</button>
-  </div>
-</form>
-{% endblock %}
 
-{% block scripts %}
-<script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.5.0/socket.io.min.js"></script>
+<!-- JS -->
+<script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
 <script>
-  const socket = io();
-  const roomName = "{{ room.name }}";
-  const username = "{{ username }}";
+    const socket = io();
 
-  const messagesDiv = document.getElementById('messages');
-  const chatForm = document.getElementById('chat-form');
-  const messageInput = document.getElementById('message-input');
+    socket.emit('join', {
+        room_id: {{ room.id }},
+        username: "{{ current_user.username }}"
+    });
 
-  function scrollToBottom() {
-    messagesDiv.scrollTop = messagesDiv.scrollHeight;
-  }
+    // Incoming messages
+    socket.on('message', function(data) {
+        const chatBox = document.getElementById('chat-box');
+        const msgHtml = `<div class="mb-2">
+            <strong class="text-primary">${data.username}</strong>
+            <small class="text-muted">(${data.timestamp})</small>:
+            <span>${data.content}</span>
+        </div>`;
+        chatBox.innerHTML += msgHtml;
+        chatBox.scrollTop = chatBox.scrollHeight;
+    });
 
-  socket.on('connect', () => {
-    socket.emit('join', { room: roomName });
-  });
-
-  socket.on('message', (msg) => {
-    const div = document.createElement('div');
-    div.textContent = msg;
-    messagesDiv.appendChild(div);
-    scrollToBottom();
-  });
-
-  chatForm.addEventListener('submit', (e) => {
-    e.preventDefault();
-    const msg = messageInput.value.trim();
-    if (!msg) return;
-    socket.emit('message', msg);
-    messageInput.value = '';
-  });
-
-  window.addEventListener('beforeunload', () => {
-    socket.emit('leave');
-  });
+    // Send message
+    document.getElementById('chat-form').addEventListener('submit', function(e) {
+        e.preventDefault();
+        const input = document.getElementById('message-input');
+        const message = input.value.trim();
+        if (message) {
+            socket.emit('send_message', {
+                room_id: {{ room.id }},
+                username: "{{ current_user.username }}",
+                content: message
+            });
+            input.value = '';
+        }
+    });
 </script>
 {% endblock %}
