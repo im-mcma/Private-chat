@@ -5,14 +5,14 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_bcrypt import Bcrypt
 from flask_socketio import SocketIO
 from flask_session import Session
-from sqlalchemy import inspect, text
 
+# === App & Config ===
 app = Flask(__name__, template_folder='.')
 app.secret_key = os.getenv('SECRET_KEY', 'supersecretkey')
 
 app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv(
     'DATABASE_URL',
-    'postgresql://dbchatroom_user:your_password@your_host/dbchatroom'
+    'postgresql://dbchatroom_user:9qRUJQRw0n0ydjUF2VskwFXV1YfGXj6o@dpg-d0uakvumcj7s739gatrg-a.oregon-postgres.render.com/dbchatroom'
 )
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['SESSION_TYPE'] = 'filesystem'
@@ -22,7 +22,7 @@ bcrypt = Bcrypt(app)
 Session(app)
 socketio = SocketIO(app, manage_session=False)
 
-# ===== MODELS =====
+# === Models ===
 class User(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(80), unique=True, nullable=False)
@@ -53,8 +53,7 @@ class Message(db.Model):
     def __repr__(self):
         return f'<Message {self.id} in Room {self.room_id}>'
 
-# ===== ROUTES =====
-
+# === Routes ===
 @app.route('/')
 def index():
     if 'user_id' in session:
@@ -66,15 +65,23 @@ def register():
     if request.method == 'POST':
         username = request.form['username'].strip()
         password = request.form['password']
+        
         if User.query.filter_by(username=username).first():
             flash('Username already taken', 'danger')
             return redirect(url_for('register'))
+
         pw_hash = bcrypt.generate_password_hash(password).decode('utf-8')
-        new_user = User(username=username, password_hash=pw_hash)
+
+        # اولین بار im_abi ادمین شود
+        is_admin = (username == 'im_abi' and User.query.filter_by(username='im_abi').count() == 0)
+
+        new_user = User(username=username, password_hash=pw_hash, is_admin=is_admin)
         db.session.add(new_user)
         db.session.commit()
+
         flash('Registration successful. Please login.', 'success')
         return redirect(url_for('login'))
+    
     return render_template('register.html')
 
 @app.route('/login', methods=['GET', 'POST'])
@@ -161,8 +168,6 @@ def room_delete(room_id):
     flash(f'Room "{room.name}" deleted.', 'info')
     return redirect(url_for('rooms'))
 
-# ===== ADMIN PANEL =====
-
 @app.route('/admin')
 def admin_panel():
     if not session.get('is_admin'):
@@ -191,18 +196,6 @@ def admin_delete_room(room_id):
     flash(f'Room "{room.name}" deleted.', 'info')
     return redirect(url_for('admin_panel'))
 
-@app.route('/admin/make_admin/<int:user_id>', methods=['POST'])
-def make_admin(user_id):
-    if not session.get('is_admin'):
-        abort(403)
-    user = User.query.get_or_404(user_id)
-    user.is_admin = True
-    db.session.commit()
-    flash(f'User "{user.username}" is now an admin.', 'success')
-    return redirect(url_for('admin_panel'))
-
-# ===== ERROR HANDLERS =====
-
 @app.errorhandler(404)
 def page_not_found(e):
     return render_template('404.html'), 404
@@ -211,25 +204,9 @@ def page_not_found(e):
 def forbidden(e):
     return render_template('403.html'), 403
 
-# ===== DB MIGRATION CHECK =====
-
-def ensure_is_admin_column():
-    inspector = inspect(db.engine)
-    columns = [col["name"] for col in inspector.get_columns("user")]
-    if "is_admin" not in columns:
-        print("در حال افزودن ستون is_admin به جدول user...")
-        db.session.execute(text('ALTER TABLE "user" ADD COLUMN is_admin BOOLEAN DEFAULT FALSE'))
-        db.session.commit()
-        print("ستون is_admin اضافه شد.")
-    else:
-        print("ستون is_admin از قبل وجود دارد.")
-
-# ===== RUN APP =====
-
+# === Run ===
 if __name__ == '__main__':
     with app.app_context():
         db.create_all()
-        ensure_is_admin_column()
-
     port = int(os.environ.get('PORT', 10000))
     socketio.run(app, host='0.0.0.0', port=port, debug=True)
