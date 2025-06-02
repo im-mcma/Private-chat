@@ -1,16 +1,13 @@
 from flask import render_template, request, redirect, url_for, session, flash, abort
 from app import app, db, bcrypt
 from models import User, Room, Message
-from werkzeug.security import generate_password_hash, check_password_hash
 
-# روت اصلی - چک لاگین و ریدایرکت مناسب
 @app.route('/')
 def index():
     if 'user_id' in session:
         return redirect(url_for('rooms'))
     return redirect(url_for('login'))
 
-# ثبت‌نام
 @app.route('/register', methods=['GET', 'POST'])
 def register():
     if request.method == 'POST':
@@ -27,7 +24,6 @@ def register():
         return redirect(url_for('login'))
     return render_template('register.html')
 
-# ورود
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
@@ -43,14 +39,12 @@ def login():
         return redirect(url_for('login'))
     return render_template('login.html')
 
-# خروج
 @app.route('/logout')
 def logout():
     session.clear()
     flash('You have been logged out.', 'info')
     return redirect(url_for('login'))
 
-# صفحه اتاق‌ها
 @app.route('/rooms')
 def rooms():
     if 'user_id' not in session:
@@ -59,7 +53,6 @@ def rooms():
     rooms = Room.query.all()
     return render_template('rooms.html', rooms=rooms, user_id=session['user_id'])
 
-# ایجاد اتاق
 @app.route('/rooms/create', methods=['GET', 'POST'])
 def create_room():
     if 'user_id' not in session:
@@ -81,7 +74,6 @@ def create_room():
         return redirect(url_for('rooms'))
     return render_template('create_room.html')
 
-# تنظیمات اتاق
 @app.route('/rooms/<int:room_id>/settings', methods=['GET', 'POST'])
 def room_settings(room_id):
     if 'user_id' not in session:
@@ -102,7 +94,6 @@ def room_settings(room_id):
         return redirect(url_for('room_settings', room_id=room_id))
     return render_template('room_settings.html', room=room)
 
-# حذف اتاق
 @app.route('/rooms/<int:room_id>/delete', methods=['POST'])
 def room_delete(room_id):
     if 'user_id' not in session:
@@ -117,7 +108,6 @@ def room_delete(room_id):
     flash(f'Room "{room.name}" deleted.', 'info')
     return redirect(url_for('rooms'))
 
-# پنل ادمین
 @app.route('/admin')
 def admin_panel():
     if not session.get('is_admin'):
@@ -146,12 +136,10 @@ def admin_delete_room(room_id):
     flash(f'Room "{room.name}" deleted.', 'info')
     return redirect(url_for('admin_panel'))
 
-# صفحه خطای 404
 @app.errorhandler(404)
 def page_not_found(e):
     return render_template('404.html'), 404
 
-# صفحه خطای 403
 @app.errorhandler(403)
 def forbidden(e):
     return render_template('403.html'), 403
