@@ -1,86 +1,77 @@
 {% extends "layout.html" %}
-{% block title %}Admin Panel{% endblock %}
+{% block title %}پنل مدیریت{% endblock %}
 
 {% block content %}
-<div class="container py-4">
-  <h2 class="fw-bold text-center mb-4">🛠 Admin Dashboard</h2>
+<div class="container mt-4">
+    <h2 class="mb-4">پنل مدیریت</h2>
 
-  <!-- Users Table -->
-  <div class="card shadow-sm mb-4">
-    <div class="card-header bg-primary text-white">
-      <h5 class="mb-0">👥 Users</h5>
-    </div>
-    <div class="card-body table-responsive">
-      <table class="table table-hover align-middle">
+    <h4>مدیریت کاربران</h4>
+    <table class="table table-striped">
         <thead>
-          <tr>
-            <th>ID</th>
-            <th>Username</th>
-            <th class="text-end">Actions</th>
-          </tr>
+            <tr>
+                <th>نام کاربری</th>
+                <th>ایمیل</th>
+                <th>وضعیت ادمین</th>
+                <th>عملیات</th>
+            </tr>
         </thead>
         <tbody>
-          {% for user in users %}
-          <tr>
-            <td>{{ user.id }}</td>
-            <td>{{ user.username }}</td>
-            <td class="text-end">
-              <form method="POST" action="{{ url_for('admin_delete_user', user_id=user.id) }}" onsubmit="return confirm('Delete user?')" style="display: inline;">
-                <button class="btn btn-sm btn-outline-danger">Delete</button>
-              </form>
-            </td>
-          </tr>
-          {% else %}
-          <tr>
-            <td colspan="3" class="text-center text-muted">No users found.</td>
-          </tr>
-          {% endfor %}
+            {% for user in users %}
+            <tr>
+                <td>{{ user.username }}</td>
+                <td>{{ user.email }}</td>
+                <td>{{ 'بله' if user.is_admin else 'خیر' }}</td>
+                <td>
+                    <form method="POST" action="{{ url_for('routes.toggle_admin', user_id=user.id) }}">
+                        <button type="submit" class="btn btn-sm btn-outline-primary">
+                            {{ 'غیرفعال کردن ادمین' if user.is_admin else 'فعال کردن ادمین' }}
+                        </button>
+                    </form>
+                </td>
+            </tr>
+            {% endfor %}
         </tbody>
-      </table>
-    </div>
-  </div>
+    </table>
 
-  <!-- Rooms Table -->
-  <div class="card shadow-sm">
-    <div class="card-header bg-success text-white">
-      <h5 class="mb-0">💬 Rooms</h5>
-    </div>
-    <div class="card-body table-responsive">
-      <table class="table table-hover align-middle">
+    <hr>
+
+    <h4>مدیریت اتاق‌ها</h4>
+    <table class="table table-striped">
         <thead>
-          <tr>
-            <th>ID</th>
-            <th>Name</th>
-            <th>Owner</th>
-            <th>Max Users</th>
-            <th>Auto Destroy</th>
-            <th class="text-end">Actions</th>
-          </tr>
+            <tr>
+                <th>نام اتاق</th>
+                <th>تاریخ ایجاد</th>
+                <th>عملیات</th>
+            </tr>
         </thead>
         <tbody>
-          {% for room in rooms %}
-          <tr>
-            <td>{{ room.id }}</td>
-            <td>{{ room.name }}</td>
-            <td>{{ room.owner.username }}</td>
-            <td>{{ room.max_users }}</td>
-            <td>{{ 'Yes' if room.auto_destroy else 'No' }}</td>
-            <td class="text-end">
-              <a href="{{ url_for('room_settings', room_id=room.id) }}" class="btn btn-sm btn-outline-primary">Edit</a>
-              <form method="POST" action="{{ url_for('admin_delete_room', room_id=room.id) }}" onsubmit="return confirm('Delete room?')" style="display:inline;">
-                <button class="btn btn-sm btn-outline-danger">Delete</button>
-              </form>
-            </td>
-          </tr>
-          {% else %}
-          <tr>
-            <td colspan="6" class="text-center text-muted">No rooms found.</td>
-          </tr>
-          {% endfor %}
+            {% for room in rooms %}
+            <tr>
+                <td>{{ room.name }}</td>
+                <td>{{ room.created_at.strftime('%Y-%m-%d %H:%M') }}</td>
+                <td>
+                    <form method="POST" action="{{ url_for('routes.delete_room', room_id=room.id) }}" onsubmit="return confirm('آیا از حذف این اتاق مطمئن هستید؟');">
+                        <button type="submit" class="btn btn-sm btn-danger">حذف</button>
+                    </form>
+                </td>
+            </tr>
+            {% endfor %}
         </tbody>
-      </table>
-    </div>
-  </div>
+    </table>
 
+    <hr>
+
+    <h4>تنظیمات</h4>
+    <form method="POST" action="{{ url_for('routes.update_settings') }}">
+        <div class="mb-3 row align-items-center">
+            <label for="room_expiry" class="col-sm-4 col-form-label">مدت زمان حذف اتاق‌ها (به دقیقه):</label>
+            <div class="col-sm-4">
+                <input type="number" class="form-control" id="room_expiry" name="room_expiry" min="1" value="{{ settings.room_expiry_minutes }}">
+            </div>
+            <div class="col-sm-4">
+                <button type="submit" class="btn btn-success">ذخیره تنظیمات</button>
+            </div>
+        </div>
+    </form>
 </div>
 {% endblock %}
