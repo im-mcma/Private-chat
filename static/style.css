@@ -1,0 +1,164 @@
+body, html {
+    margin: 0;
+    padding: 0;
+    height: 100%;
+    font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+    background-color: #f7f9fc;
+    color: #333;
+}
+
+/* Navbar styling */
+.navbar {
+    background-color: #3b82f6;
+    padding: 1rem 2rem;
+    color: white;
+}
+
+.navbar a {
+    color: white;
+    text-decoration: none;
+    margin-right: 1.5rem;
+    font-weight: 600;
+}
+
+.navbar a:hover {
+    text-decoration: underline;
+}
+
+/* Container adjustments */
+.container {
+    max-width: 900px;
+    margin: 2rem auto;
+    background: white;
+    padding: 2rem;
+    border-radius: 10px;
+    box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+}
+
+/* Buttons */
+.btn {
+    font-weight: 600;
+    border-radius: 5px;
+    transition: background-color 0.3s ease;
+}
+
+.btn-primary {
+    background-color: #3b82f6;
+    border: none;
+    color: white;
+}
+
+.btn-primary:hover {
+    background-color: #2563eb;
+}
+
+.btn-danger {
+    background-color: #ef4444;
+    border: none;
+    color: white;
+}
+
+.btn-danger:hover {
+    background-color: #dc2626;
+}
+
+.btn-outline-primary {
+    color: #3b82f6;
+    border: 2px solid #3b82f6;
+    background-color: transparent;
+}
+
+.btn-outline-primary:hover {
+    background-color: #3b82f6;
+    color: white;
+}
+
+/* Forms */
+form input[type="text"],
+form input[type="email"],
+form input[type="password"],
+form input[type="number"],
+form select,
+form textarea {
+    width: 100%;
+    padding: 0.6rem 0.8rem;
+    margin-top: 0.3rem;
+    margin-bottom: 1rem;
+    border: 1.5px solid #ddd;
+    border-radius: 6px;
+    transition: border-color 0.3s ease;
+}
+
+form input[type="text"]:focus,
+form input[type="email"]:focus,
+form input[type="password"]:focus,
+form input[type="number"]:focus,
+form select:focus,
+form textarea:focus {
+    border-color: #3b82f6;
+    outline: none;
+}
+
+/* Tables */
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 2rem;
+}
+
+table th,
+table td {
+    padding: 12px 15px;
+    border-bottom: 1px solid #e2e8f0;
+    text-align: left;
+}
+
+table th {
+    background-color: #f3f4f6;
+    font-weight: 600;
+}
+
+/* Chat UI enhancements */
+.chat-messages {
+    height: 400px;
+    overflow-y: auto;
+    border: 1.5px solid #ddd;
+    padding: 1rem;
+    border-radius: 8px;
+    background-color: #fafafa;
+}
+
+.chat-message {
+    margin-bottom: 1rem;
+}
+
+.chat-message .username {
+    font-weight: 700;
+    margin-right: 0.5rem;
+    color: #3b82f6;
+}
+
+.chat-message .timestamp {
+    font-size: 0.8rem;
+    color: #6b7280;
+}
+
+.chat-message .text {
+    margin-top: 0.3rem;
+}
+
+/* Responsive */
+@media (max-width: 600px) {
+    .container {
+        margin: 1rem;
+        padding: 1rem;
+    }
+
+    .navbar {
+        padding: 0.8rem 1rem;
+    }
+
+    table th, table td {
+        font-size: 0.9rem;
+    }
+}
