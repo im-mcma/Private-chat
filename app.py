@@ -20,7 +20,7 @@ bcrypt = Bcrypt(app)
 Session(app)
 socketio = SocketIO(app, manage_session=False)
 
-import routes
+import routes  # ایمپورت routes بعد از ساختن app و db و ...
 
 if __name__ == '__main__':
     with app.app_context():
