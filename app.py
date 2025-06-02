@@ -12,7 +12,7 @@ app.secret_key = os.getenv('SECRET_KEY', 'supersecretkey')
 
 app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv(
     'DATABASE_URL',
-    'postgresql://dbchatroom_user:9qRUJQRw0n0ydjUF2VskwFXV1YfGXj6o@dpg-d0uakvumcj7s739gatrg-a.oregon-postgres.render.com/dbchatroom'
+    'postgresql://im_abi:5o5muD7i1USga9vrPKkanDT79166F8Fq@dpg-d0un1ije5dus739p49vg-a.oregon-postgres.render.com/dbchatroom_l6qi'
 )
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['SESSION_TYPE'] = 'filesystem'
