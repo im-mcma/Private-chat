@@ -2,8 +2,10 @@ Flask
 Flask-SQLAlchemy
 Flask-Bcrypt
 Flask-SocketIO
+Flask-Session
 python-socketio
 python-engineio
+python-dotenv
 psycopg2-binary
 Flask-Session
 eventlet
