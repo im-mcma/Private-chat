@@ -7,5 +7,4 @@ python-socketio
 python-engineio
 python-dotenv
 psycopg2-binary
-Flask-Session
 eventlet
