@@ -6,7 +6,7 @@ from flask_bcrypt import Bcrypt
 from flask_socketio import SocketIO
 from flask_session import Session
 
-app = Flask(__name__, template_folder='templates')
+app = Flask(__name__, template_folder='.')
 app.secret_key = os.getenv('SECRET_KEY', 'supersecretkey')
 
 app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv(
